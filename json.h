@@ -1,10 +1,10 @@
 #ifndef JSON_H
 #define JSON_H
 
+#include <stdlib.h>
 #include <vector>
 #include <map>
 #include <string>
-#include <cstdlib>
 
 namespace json {
     // Forward declarations
