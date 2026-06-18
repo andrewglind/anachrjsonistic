@@ -1,0 +1,4 @@
+-cp json
+-D dll_link
+-cpp build
+-main json.Main
