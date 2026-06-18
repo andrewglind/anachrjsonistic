@@ -1,0 +1,481 @@
+#ifndef JSON_H
+#define JSON_H
+
+#if __cplusplus < 201103L
+	#if defined(_MSC_VER)
+		typedef unsigned __int8 uint8_t;
+		typedef unsigned __int16 uint16_t;
+		typedef unsigned __int32 uint32_t;
+	#else
+		typedef unsigned char uint8_t;
+		typedef unsigned short uint16_t;
+		typedef unsigned int uint32_t;
+	#endif
+#else
+	#include <stdint.h>
+#endif
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
+#include <time.h>
+
+#include <string>
+#include <vector>
+#include <map>
+
+#if defined(_MSC_VER)
+	#define HATCHET_EXPORT extern "C" __declspec(dllexport)
+	#define HATCHET_CALL   __cdecl
+	#define HATCHET_CLASS  __declspec(dllexport)
+#elif defined(__GNUC__)
+	#define HATCHET_EXPORT extern "C" __attribute__((visibility("default")))
+	#define HATCHET_CALL
+	#define HATCHET_CLASS  __attribute__((visibility("default")))
+#else
+	#define HATCHET_EXPORT extern "C"
+	#define HATCHET_CALL
+	#define HATCHET_CLASS
+#endif
+
+namespace json {
+	class Json;
+}
+
+namespace json {
+
+	class proxy;
+
+	struct JType_ {
+		enum Enum {
+			Str,
+			Obj,
+			Arr
+		};
+	};
+	typedef JType_::Enum JType;
+
+	class jvalue {
+	public:
+		jvalue();
+		virtual ~jvalue() {}
+		static jvalue* ofString(const std::string& v);
+		static jvalue* ofArray(const std::vector<jvalue*>& a);
+		jvalue* findKey(const std::string& key);
+		void setKey(const std::string& key, jvalue* val);
+		bool isString();
+		bool isObject();
+		bool isArray();
+		JType type;
+		std::string s;
+		std::vector<std::string> objectKeys;
+		std::vector<jvalue*> objectVals;
+		std::vector<jvalue*> array;
+	};
+
+	class jobject {
+	public:
+		jobject(jvalue* root = NULL);
+		~jobject() {}
+		jvalue* root();
+		bool hasKey(const std::string& key);
+		void setString(const std::string& key, const std::string& value);
+		void setObject(const std::string& key, jobject child);
+		void setArray(const std::string& key, const std::vector<jvalue*>& arr);
+		std::map<std::string, std::string> toMap();
+		proxy get(const std::string& key);
+		proxy operator[](const std::string& key);
+	protected:
+		jvalue* __this;
+	};
+
+	class proxy {
+	public:
+		proxy(jvalue* v);
+		~proxy() {}
+		proxy key(const std::string& k);
+		proxy operator[](const std::string& k) { return key(k); }
+		proxy index(int i);
+		proxy operator[](int i) { return index(i); }
+		std::string toStr();
+		operator std::string() { return toStr(); }
+		int toInt();
+		operator int() { return toInt(); }
+		float toFloat();
+		operator float() { return toFloat(); }
+		bool toBool();
+		operator bool() { return toBool(); }
+		jobject toObject();
+		operator jobject() { return toObject(); }
+		std::vector<jobject> toObjectArray();
+		operator std::vector<jobject>() { return toObjectArray(); }
+		bool isValid();
+		bool isString();
+		bool isObject();
+		bool isArray();
+	protected:
+		jvalue* __this;
+	};
+
+	class Json {
+	public:
+		Json(const std::string& text);
+		virtual ~Json() {}
+		std::string cur();
+		void skipWs();
+		std::string parseString();
+		std::string parseUnquoted();
+		jobject parseObject();
+		std::vector<jvalue*> parseArray();
+		static jobject parse(const std::string& text);
+	protected:
+		std::string text;
+		int pos;
+	};
+
+	inline proxy jobject::operator[](const std::string& key) { return get(key); }
+
+}
+
+namespace json {
+
+	inline jvalue::jvalue() {
+	this->type = JType_::Str;
+	this->s = "";
+	this->objectKeys.clear();
+	this->objectVals.clear();
+	this->array.clear();
+	}
+
+	inline jvalue* jvalue::ofString(const std::string& v) {
+	jvalue* j = new jvalue();
+	j->type = JType_::Str;
+	j->s = v;
+	return j;
+	}
+
+	inline jvalue* jvalue::ofArray(const std::vector<jvalue*>& a) {
+	jvalue* j = new jvalue();
+	j->type = JType_::Arr;
+	j->array = a;
+	return j;
+	}
+
+	inline jvalue* jvalue::findKey(const std::string& key) {
+	for (size_t _i1 = 0; _i1 < this->objectKeys.size(); ++_i1) {
+		int i = (int)_i1;
+		std::string k = this->objectKeys[_i1];
+		if (k == key) {
+			return this->objectVals[i];
+		}
+	}
+	return NULL;
+	}
+
+	inline void jvalue::setKey(const std::string& key, jvalue* val) {
+	for (size_t _i2 = 0; _i2 < this->objectKeys.size(); ++_i2) {
+		int i = (int)_i2;
+		std::string k = this->objectKeys[_i2];
+		if (k == key) {
+			size_t _ix3 = (size_t)(i);
+			if (_ix3 >= this->objectVals.size()) this->objectVals.resize(_ix3 + 1);
+			this->objectVals[_ix3] = val;
+			return;
+		}
+	}
+	this->objectKeys.push_back(key);
+	this->objectVals.push_back(val);
+	}
+
+	inline bool jvalue::isString() {
+	return this->type == JType_::Str;
+	}
+
+	inline bool jvalue::isObject() {
+	return this->type == JType_::Obj;
+	}
+
+	inline bool jvalue::isArray() {
+	return this->type == JType_::Arr;
+	}
+
+	inline jobject::jobject(jvalue* root) {
+	if (root == NULL) {
+		this->__this = new jvalue();
+		this->__this->type = JType_::Obj;
+	} else {
+		this->__this = root;
+	}
+	}
+
+	inline jvalue* jobject::root() {
+	return this->__this;
+	}
+
+	inline bool jobject::hasKey(const std::string& key) {
+	return this->__this->findKey(key) != NULL;
+	}
+
+	inline void jobject::setString(const std::string& key, const std::string& value) {
+	this->__this->setKey(key, jvalue::ofString(value));
+	}
+
+	inline void jobject::setObject(const std::string& key, jobject child) {
+	this->__this->setKey(key, child.root());
+	}
+
+	inline void jobject::setArray(const std::string& key, const std::vector<jvalue*>& arr) {
+	this->__this->setKey(key, jvalue::ofArray(arr));
+	}
+
+	inline std::map<std::string, std::string> jobject::toMap() {
+	std::map<std::string, std::string > _compr1;
+	for (size_t _i2 = 0; _i2 < this->__this->objectKeys.size(); ++_i2) {
+		int i = (int)_i2;
+		std::string k = this->__this->objectKeys[_i2];
+		if (this->__this->objectVals[i]->isString()) {
+				_compr1[k] = this->__this->objectVals[i]->s;
+		}
+	}
+	return _compr1;
+	}
+
+	inline proxy jobject::get(const std::string& key) {
+	return proxy(this->__this->findKey(key));
+	}
+
+	inline proxy::proxy(jvalue* v) {
+	this->__this = v;
+	}
+
+	inline proxy proxy::key(const std::string& k) {
+	return proxy(((this->__this != NULL ? this->__this->isObject() : false)) ? this->__this->findKey(k) : NULL);
+	}
+
+	inline proxy proxy::index(int i) {
+	if (!((this->__this != NULL ? this->__this->isArray() : false)) || i < 0 || (size_t)(i) >= this->__this->array.size()) {
+		return proxy(NULL);
+	}
+	return proxy(this->__this->array[i]);
+	}
+
+	inline std::string proxy::toStr() {
+	return ((this->__this != NULL ? this->__this->isString() : false)) ? this->__this->s : "";
+	}
+
+	inline int proxy::toInt() {
+	return ((this->__this != NULL ? this->__this->isString() : false)) ? (int)strtol(this->__this->s.c_str(), NULL, 0) : 0;
+	}
+
+	inline float proxy::toFloat() {
+	return ((this->__this != NULL ? this->__this->isString() : false)) ? ((float) atof(this->__this->s.c_str())) : ((float) 0.0);
+	}
+
+	inline bool proxy::toBool() {
+	return ((this->__this != NULL ? this->__this->isString() : false)) && (this->__this->s == "true" || this->__this->s == "1" || this->__this->s == "yes");
+	}
+
+	inline jobject proxy::toObject() {
+	return ((this->__this != NULL ? this->__this->isObject() : false)) ? jobject(this->__this) : jobject();
+	}
+
+	inline std::vector<jobject> proxy::toObjectArray() {
+	if (!((this->__this != NULL ? this->__this->isArray() : false))) {
+		return std::vector<jobject>();
+	}
+	std::vector<jobject > _compr1;
+	for (size_t _i2 = 0; _i2 < this->__this->array.size(); ++_i2) {
+		jvalue* elem = this->__this->array[_i2];
+	jobject _ifx3;
+	if (elem->isObject()) {
+		_ifx3 = jobject(elem);
+	} else {
+		if (elem->isString()) {
+			jobject o = jobject();
+			o.setString("value", elem->s);
+			_ifx3 = o;
+		} else {
+			jobject o = jobject();
+			o.setArray("array", elem->array);
+			_ifx3 = o;
+		}
+	}
+		_compr1.push_back(_ifx3);
+	}
+	return _compr1;
+	}
+
+	inline bool proxy::isValid() {
+	return this->__this != NULL;
+	}
+
+	inline bool proxy::isString() {
+	return (this->__this != NULL ? this->__this->isString() : false);
+	}
+
+	inline bool proxy::isObject() {
+	return (this->__this != NULL ? this->__this->isObject() : false);
+	}
+
+	inline bool proxy::isArray() {
+	return (this->__this != NULL ? this->__this->isArray() : false);
+	}
+
+	inline Json::Json(const std::string& text) {
+	this->text = text;
+	this->pos = 0;
+	}
+
+	inline std::string Json::cur() {
+	return this->text.substr(this->pos, 1);
+	}
+
+	inline void Json::skipWs() {
+	std::string c = cur();
+	while (c == " " || c == "\n" || c == "\t" || c == "\r") {
+		this->pos++;
+		c = cur();
+	}
+	}
+
+	inline std::string Json::parseString() {
+	std::string out = "";
+	this->pos++;
+	std::string c = cur();
+	while (c != "" && c != "\"") {
+		if (c == "\\") {
+			this->pos++;
+			std::string e = cur();
+			if (e == "") {
+				break;
+			}
+			if (e == "n") {
+				out += "\n";
+			} else {
+				if (e == "t") {
+					out += "\t";
+				} else {
+					if (e == "r") {
+						out += "\r";
+					} else {
+						out += e;
+					}
+				}
+			}
+			this->pos++;
+		} else {
+			out += c;
+			this->pos++;
+		}
+		c = cur();
+	}
+	if (cur() == "\"") {
+		this->pos++;
+	}
+	return out;
+	}
+
+	inline std::string Json::parseUnquoted() {
+	int start = this->pos;
+	std::string c = cur();
+	while (c != "" && c != "," && c != "}" && c != "]" && c != " " && c != "\n" && c != "\t" && c != "\r") {
+		this->pos++;
+		c = cur();
+	}
+	std::string _s1 = this->text;
+	int _a2 = (int)(start); if (_a2 < 0) _a2 = 0; if ((size_t)_a2 > _s1.size()) _a2 = (int)_s1.size();
+	int _b3 = (int)(this->pos); if (_b3 < 0) _b3 = 0; if ((size_t)_b3 > _s1.size()) _b3 = (int)_s1.size();
+	if (_a2 > _b3) { int t = _a2; _a2 = _b3; _b3 = t; }
+	std::string _sub4 = _s1.substr((size_t)_a2, (size_t)(_b3 - _a2));
+	return _sub4;
+	}
+
+	inline jobject Json::parseObject() {
+	jobject obj = jobject();
+	this->pos++;
+	skipWs();
+	std::string c = cur();
+	while (c != "" && c != "}") {
+		if (c != "\"") {
+			this->pos++;
+			c = cur();
+			continue;
+		}
+		std::string key = parseString();
+		skipWs();
+		if (cur() == ":") {
+			this->pos++;
+		}
+		skipWs();
+		std::string d = cur();
+		if (d == "{") {
+			obj.setObject(key, parseObject());
+		} else {
+			if (d == "[") {
+				obj.setArray(key, parseArray());
+			} else {
+				if (d == "\"") {
+					obj.setString(key, parseString());
+				} else {
+					obj.setString(key, parseUnquoted());
+				}
+			}
+		}
+		skipWs();
+		if (cur() == ",") {
+			this->pos++;
+			skipWs();
+		}
+		c = cur();
+	}
+	if (cur() == "}") {
+		this->pos++;
+	}
+	return obj;
+	}
+
+	inline std::vector<jvalue*> Json::parseArray() {
+	std::vector<jvalue*> arr;
+	this->pos++;
+	skipWs();
+	std::string c = cur();
+	while (c != "" && c != "]") {
+		if (c == "{") {
+			jobject child = parseObject();
+			arr.push_back(child.root());
+		} else {
+			if (c == "[") {
+				arr.push_back(jvalue::ofArray(parseArray()));
+			} else {
+				if (c == "\"") {
+					arr.push_back(jvalue::ofString(parseString()));
+				} else {
+					arr.push_back(jvalue::ofString(parseUnquoted()));
+				}
+			}
+		}
+		skipWs();
+		if (cur() == ",") {
+			this->pos++;
+			skipWs();
+		}
+		c = cur();
+	}
+	if (cur() == "]") {
+		this->pos++;
+	}
+	return arr;
+	}
+
+	inline jobject Json::parse(const std::string& text) {
+	Json* p = new Json(text);
+	p->skipWs();
+	jobject _ret5 = p->parseObject();
+	delete p;
+	return _ret5;
+	}
+
+
+}
+
+#endif

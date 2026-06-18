@@ -1,8 +1,12 @@
 # Anachrjsonistic
 
-The anachronistic JSON parser - written in [Haxe](https://haxe.org) and transpiled to C++98 standard/Visual C++ 6.0 friendly C++ via [Hatchet](https://github.com/andrewglind/hatchet).
+The anachronistic JSON parser - written in [Haxe](https://haxe.org) and transpiled to C++98 standard C++ via [Hatchet](https://github.com/andrewglind/hatchet). It exposes a [Simpleson](https://github.com/gregjesl/simpleson)-like API, lightweight (header-only), and can be used with Visual C++ 6.0 projects.
 
-[Simpleson](https://github.com/gregjesl/simpleson)-like API, lightweight and fast.
+## Build
+
+```bash
+hatchet --src json/Json.hx --header-only json --out . --force
+```
 
 ## Tested platforms/compilers
 

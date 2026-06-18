@@ -52,8 +52,8 @@ class JValue {
 	// The value for `key`, or `null` if this node is not an object / has no such
 	// key (the `jvalue*` / null of the original).
 	public function findKey(key:String):JValue {
-		for (i in 0...this.objectKeys.length) {
-			if (this.objectKeys[i] == key) {
+		for (i => k in this.objectKeys) {
+			if (k == key) {
 				return this.objectVals[i];
 			}
 		}
@@ -62,8 +62,8 @@ class JValue {
 
 	// Insert or replace `key`, preserving first-seen order.
 	public function setKey(key:String, val:JValue):Void {
-		for (i in 0...this.objectKeys.length) {
-			if (this.objectKeys[i] == key) {
+		for (i => k in this.objectKeys) {
+			if (k == key) {
 				this.objectVals[i] = val;
 				return;
 			}
@@ -128,13 +128,11 @@ abstract JObject(JValue) {
 	}
 
 	public function toMap():Map<String, String> {
-		var out = new Map<String, String>();
-		for (i in 0...this.objectKeys.length) {
-			if (this.objectVals[i].isString()) {
-				out.set(this.objectKeys[i], this.objectVals[i].s);
-			}
-		}
-		return out;
+		return [
+			for (i => k in this.objectKeys)
+				if (this.objectVals[i].isString())
+					k => this.objectVals[i].s
+		];
 	}
 
 	// `obj["key"]` → a `Proxy` over the value (or a null `Proxy` if absent).
@@ -164,82 +162,59 @@ abstract Proxy(JValue) {
 
 	// `p["key"]` — descend into an object (null `Proxy` unless this is an object).
 	@:op([]) public function key(k:String):Proxy {
-		if (this == null || !this.isObject()) {
-			return new Proxy(null);
-		}
-		return new Proxy(this.findKey(k));
+		return new Proxy((this?.isObject() ?? false) ? this.findKey(k) : null);
 	}
 
 	// `p[i]` — index into an array (null `Proxy` unless this is an array and `i`
 	// is in range).
 	@:op([]) public function index(i:Int):Proxy {
-		if (this == null || !this.isArray()) {
-			return new Proxy(null);
-		}
-		if (i < 0 || i >= this.array.length) {
+		if (!(this?.isArray() ?? false) || i < 0 || i >= this.array.length) {
 			return new Proxy(null);
 		}
 		return new Proxy(this.array[i]);
 	}
 
 	@:to public function toStr():String {
-		if (this == null || !this.isString()) {
-			return "";
-		}
-		return this.s;
+		return (this?.isString() ?? false) ? this.s : "";
 	}
 
 	@:to public function toInt():Int {
-		if (this == null || !this.isString()) {
-			return 0;
-		}
-		return Std.parseInt(this.s);
+		return (this?.isString() ?? false) ? Std.parseInt(this.s) : 0;
 	}
 
 	@:to public function toFloat():cpp.Float32 {
-		if (this == null || !this.isString()) {
-			return cast(0.0, cpp.Float32);
-		}
-		return cast(Std.parseFloat(this.s), cpp.Float32);
+		return (this?.isString() ?? false) ? cast(Std.parseFloat(this.s), cpp.Float32) : cast(0.0, cpp.Float32);
 	}
 
 	@:to public function toBool():Bool {
-		if (this == null || !this.isString()) {
-			return false;
-		}
-		return this.s == "true" || this.s == "1" || this.s == "yes";
+		return (this?.isString() ?? false) && (this.s == "true" || this.s == "1" || this.s == "yes");
 	}
 
 	// Read the value back as an object (empty object when it is not one).
 	@:to public function toObject():JObject {
-		if (this != null && this.isObject()) {
-			return new JObject(this);
-		}
-		return new JObject();
+		return (this?.isObject() ?? false) ? new JObject(this) : new JObject();
 	}
 
 	// Read an array as a list of objects, wrapping scalar/array elements the same
 	// way the original `operator std::vector<jobject>()` did.
 	@:to public function toObjectArray():Array<JObject> {
-		var out:Array<JObject> = [];
-		if (this == null || !this.isArray()) {
-			return out;
+		if (!(this?.isArray() ?? false)) {
+			return [];
 		}
-		for (i in 0...this.array.length) {
-			var elem = this.array[i];
-			if (elem.isObject()) {
-				out.push(new JObject(elem));
-			} else if (elem.isString()) {
-				var o = new JObject();
-				o.setString("value", elem.s);
-				out.push(o);
-			} else if (elem.isArray()) {
-				var o = new JObject();
-				o.setArray("array", elem.array);
-				out.push(o);
-			}
-		}
-		return out;
+		return [
+			for (elem in this.array)
+				if (elem.isObject()) {
+					new JObject(elem);
+				} else if (elem.isString()) {
+					var o = new JObject();
+					o.setString("value", elem.s);
+					o;
+				} else {
+					var o = new JObject();
+					o.setArray("array", elem.array);
+					o;
+				}
+		];
 	}
 
 	public function isValid():Bool {
@@ -247,15 +222,15 @@ abstract Proxy(JValue) {
 	}
 
 	public function isString():Bool {
-		return this != null && this.isString();
+		return this?.isString() ?? false;
 	}
 
 	public function isObject():Bool {
-		return this != null && this.isObject();
+		return this?.isObject() ?? false;
 	}
 
 	public function isArray():Bool {
-		return this != null && this.isArray();
+		return this?.isArray() ?? false;
 	}
 }
 
@@ -270,7 +245,7 @@ class Json {
 	var text:String;
 	var pos:Int;
 
-	public function new(text:String) {
+	function new(text:String) {
 		this.text = text;
 		this.pos = 0;
 	}
@@ -281,7 +256,7 @@ class Json {
 		return this.text.charAt(this.pos);
 	}
 
-	public function skipWs():Void {
+	function skipWs():Void {
 		var c = cur();
 		while (c == " " || c == "\n" || c == "\t" || c == "\r") {
 			this.pos++;
@@ -332,7 +307,7 @@ class Json {
 		return this.text.substring(start, this.pos);
 	}
 
-	public function parseObject():JObject {
+	function parseObject():JObject {
 		var obj = new JObject();
 		this.pos++; // skip '{'
 		skipWs();
@@ -400,11 +375,11 @@ class Json {
 		}
 		return arr;
 	}
-}
-
-// Parse a JSON document, returning its root object.
-function parse(text:String):JObject {
-	var p = new Json(text);
-	p.skipWs();
-	return p.parseObject();
+	
+	// Parse a JSON document, returning its root object.
+	public static function parse(text:String):JObject {
+		var p = new Json(text);
+		p.skipWs();
+		return p.parseObject();
+	}
 }
