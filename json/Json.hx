@@ -1,8 +1,7 @@
 package json;
 
 // ---------------------------------------------------------------------------
-// JType — the three value shapes (the original `jvalue::Type`). An `Int`-backed
-// `enum abstract` lowers to a plain C++ `enum`.
+// JType — the three value shapes
 // ---------------------------------------------------------------------------
 enum abstract JType(Int) {
 	var Str;	// 0 — a scalar string (numbers/bools are stored as their text too)
@@ -11,11 +10,7 @@ enum abstract JType(Int) {
 }
 
 // ---------------------------------------------------------------------------
-// JValue — the value node (C++ `json::jvalue`). A reference type (Hatchet emits
-// it as a heap class, referenced by pointer), so `findKey` hands back a live
-// node and `Proxy` can wrap one — just as the original returned a `jvalue*`. An
-// object is parallel key/value arrays (insertion order preserved); an array is a
-// list of child values.
+// JValue — the value node (C++ `json::jvalue`)
 // ---------------------------------------------------------------------------
 @:native("jvalue")
 class JValue {
@@ -33,8 +28,6 @@ class JValue {
 		this.array = [];
 	}
 
-	// A scalar value holding `v` (the parser stores numbers and booleans as text,
-	// just as the C++ version did — conversion happens at read time in `Proxy`).
 	public static function ofString(v:String):JValue {
 		var j = new JValue();
 		j.type = JType.Str;
@@ -49,8 +42,7 @@ class JValue {
 		return j;
 	}
 
-	// The value for `key`, or `null` if this node is not an object / has no such
-	// key (the `jvalue*` / null of the original).
+	// The value for `key`, or `null` if this node is not an object / has no such key
 	public function findKey(key:String):JValue {
 		for (i => k in this.objectKeys) {
 			if (k == key) {
@@ -60,7 +52,7 @@ class JValue {
 		return null;
 	}
 
-	// Insert or replace `key`, preserving first-seen order.
+	// Insert or replace `key`, preserving first-seen order
 	public function setKey(key:String, val:JValue):Void {
 		for (i => k in this.objectKeys) {
 			if (k == key) {
@@ -86,16 +78,10 @@ class JValue {
 }
 
 // ---------------------------------------------------------------------------
-// JObject — a JSON object (C++ `json::jobject`). An `abstract` over a `JValue`:
-// a zero-overhead typed view of an object-kind node, so `obj["key"]` is a real
-// C++ `operator[]` (via `@:op([])`) returning a `Proxy`. `this` inside these
-// methods is the underlying `JValue`.
+// JObject — a JSON object (C++ `json::jobject`)
 // ---------------------------------------------------------------------------
 @:native("jobject")
 abstract JObject(JValue) {
-	// `new JObject()` makes a fresh, empty object node; `new JObject(existing)`
-	// adopts an existing object-kind `JValue` (reading a nested object back out —
-	// the equivalent of the C++ `out.root = *val`).
 	public function new(?root:JValue) {
 		if (root == null) {
 			this = new JValue();
@@ -105,8 +91,7 @@ abstract JObject(JValue) {
 		}
 	}
 
-	// The underlying node — the analogue of the public `jobject::root` member,
-	// used by the parser when nesting an object inside an array.
+	// The underlying node
 	public function root():JValue {
 		return this;
 	}
@@ -135,24 +120,14 @@ abstract JObject(JValue) {
 		];
 	}
 
-	// `obj["key"]` → a `Proxy` over the value (or a null `Proxy` if absent).
+	// A `Proxy` over the value
 	@:op([]) public function get(key:String):Proxy {
 		return new Proxy(this.findKey(key));
 	}
 }
 
 // ---------------------------------------------------------------------------
-// Proxy — a read cursor into a JSON value (C++ `json::proxy`), and the whole
-// reason `abstract` types exist in Hatchet. An `abstract` wrapping a (possibly
-// null) `JValue`:
-//
-//   * `p["key"]` / `p[i]` are real `operator[]` overloads (`@:op([])`),
-//   * an implicit cast to `String`/`Int`/`cpp.Float32`/`Bool`/`JObject`/`Array<JObject>`
-//     is a real C++ conversion operator (`@:to`),
-//
-// so a consumer writes `var n:Int = obj["count"];` and the C++ compiler picks
-// the conversion. A null wrap is the "missing / wrong type" sentinel (the
-// original's null `jvalue*`).
+// Proxy — a read cursor into a JSON value (C++ `json::proxy`)
 // ---------------------------------------------------------------------------
 @:native("proxy")
 abstract Proxy(JValue) {
@@ -160,13 +135,12 @@ abstract Proxy(JValue) {
 		this = v;
 	}
 
-	// `p["key"]` — descend into an object (null `Proxy` unless this is an object).
+	// Descend into an object (null `Proxy` unless this is an object)
 	@:op([]) public function key(k:String):Proxy {
 		return new Proxy((this?.isObject() ?? false) ? this.findKey(k) : null);
 	}
 
-	// `p[i]` — index into an array (null `Proxy` unless this is an array and `i`
-	// is in range).
+	// Index into an array (null `Proxy` unless this is an array and `i` is in range)
 	@:op([]) public function index(i:Int):Proxy {
 		if (!(this?.isArray() ?? false) || i < 0 || i >= this.array.length) {
 			return new Proxy(null);
@@ -190,13 +164,12 @@ abstract Proxy(JValue) {
 		return (this?.isString() ?? false) && (this.s == "true" || this.s == "1" || this.s == "yes");
 	}
 
-	// Read the value back as an object (empty object when it is not one).
+	// Read the value back as an object
 	@:to public function toObject():JObject {
 		return (this?.isObject() ?? false) ? new JObject(this) : new JObject();
 	}
 
-	// Read an array as a list of objects, wrapping scalar/array elements the same
-	// way the original `operator std::vector<jobject>()` did.
+	// Read an array as a list of objects
 	@:to public function toObjectArray():Array<JObject> {
 		if (!(this?.isArray() ?? false)) {
 			return [];
@@ -235,23 +208,18 @@ abstract Proxy(JValue) {
 }
 
 // ---------------------------------------------------------------------------
-// Json — the parser + entry point (the free `json::parse`, `parse_object`,
-// `parse_array`, … functions). The C++ version threaded a `const char*& p`
-// cursor; here the cursor is a `String` plus an `Int` position, which Hatchet
-// lowers to a `std::string` and an index. Deliberately lenient (the original's
-// behaviour): unquoted scalars are kept as text, malformed input is skipped.
+// Json — the parser
 // ---------------------------------------------------------------------------
 class Json {
 	var text:String;
 	var pos:Int;
 
-	function new(text:String) {
+	public function new(text:String) {
 		this.text = text;
 		this.pos = 0;
 	}
 
-	// The character at the cursor, or "" at end of input (`std::string::substr`
-	// returns empty at `size()`), which every loop below treats as the terminator.
+	// The character at the cursor, or "" at end of input
 	function cur():String {
 		return this.text.charAt(this.pos);
 	}
@@ -376,10 +344,15 @@ class Json {
 		return arr;
 	}
 	
-	// Parse a JSON document, returning its root object.
 	public static function parse(text:String):JObject {
+		//  Parse a JSON document, returning its root object
 		var p = new Json(text);
 		p.skipWs();
 		return p.parseObject();
 	}
 }
+
+// ---------------------------------------------------------------------------
+// Entry point
+// ---------------------------------------------------------------------------
+final parse:(String) -> JObject = (text) -> Json.parse(text);
