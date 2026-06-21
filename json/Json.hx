@@ -5,7 +5,7 @@ package json;
 // ---------------------------------------------------------------------------
 enum abstract JType(Int) {
 	var Str;	// 0 — a scalar string (numbers/bools are stored as their text too)
-	var Obj;	// 1 — an object: parallel key/value arrays
+	var Obj;	// 1 — an ordered map of key/value pairs
 	var Arr;	// 2 — an array of values
 }
 
@@ -16,15 +16,13 @@ enum abstract JType(Int) {
 class JValue {
 	public var type:JType;
 	public var s:String;
-	public var objectKeys:Array<String>;
-	public var objectVals:Array<JValue>;
+	@orderedMap public var objects:Map<String, JValue>;
 	public var array:Array<JValue>;
 
 	public function new() {
 		this.type = JType.Str;
 		this.s = "";
-		this.objectKeys = [];
-		this.objectVals = [];
+		this.objects = [];
 		this.array = [];
 	}
 
@@ -44,24 +42,12 @@ class JValue {
 
 	// The value for `key`, or `null` if this node is not an object / has no such key
 	public function findKey(key:String):JValue {
-		for (i => k in this.objectKeys) {
-			if (k == key) {
-				return this.objectVals[i];
-			}
-		}
-		return null;
+		return this.objects.get(key);
 	}
 
 	// Insert or replace `key`, preserving first-seen order
 	public function setKey(key:String, val:JValue):Void {
-		for (i => k in this.objectKeys) {
-			if (k == key) {
-				this.objectVals[i] = val;
-				return;
-			}
-		}
-		this.objectKeys.push(key);
-		this.objectVals.push(val);
+		this.objects.set(key, val);
 	}
 
 	public function isString():Bool {
@@ -113,11 +99,7 @@ abstract JObject(JValue) {
 	}
 
 	public function toMap():Map<String, String> {
-		return [
-			for (i => k in this.objectKeys)
-				if (this.objectVals[i].isString())
-					k => this.objectVals[i].s
-		];
+		return [ for (k => v in this.objects) if(v.isString()) k => v.s ];
 	}
 
 	// A `Proxy` over the value
