@@ -49,9 +49,9 @@ namespace json {
 
 	struct JType_ {
 		enum Enum {
-			Str,
-			Obj,
-			Arr
+			Str = 0,
+			Obj = 1,
+			Arr = 2
 		};
 	};
 	typedef JType_::Enum JType;

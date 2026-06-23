@@ -4,9 +4,9 @@ package json;
 // JType — the three value shapes
 // ---------------------------------------------------------------------------
 enum abstract JType(Int) {
-	var Str;	// 0 — a scalar string (numbers/bools are stored as their text too)
-	var Obj;	// 1 — an ordered map of key/value pairs
-	var Arr;	// 2 — an array of values
+	var Str = 0;	// a scalar string (numbers/bools are stored as their text too)
+	var Obj = 1;	// an ordered map of key/value pairs
+	var Arr = 2;	// an array of values
 }
 
 // ---------------------------------------------------------------------------
