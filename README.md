@@ -121,9 +121,6 @@ With CMake:
 cmake -B build && cmake --build build && ctest --test-dir build --output-on-failure
 ```
 
-CI runs the suite on Linux (GCC), macOS (Clang), and Windows (MSVC)
-via GitHub Actions.
-
 ## Tested platforms/compilers
 
 - [x] Windows 98 with Visual C++ 6.0
