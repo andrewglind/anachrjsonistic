@@ -129,6 +129,8 @@ via GitHub Actions.
 - [x] Windows 98 with Visual C++ 6.0
 - [x] Windows 11 with Visual Studio 2022
 - [x] Windows 11 with Visual Studio 2026
+- [x] Ubuntu 24.04 with GCC 13
+- [x] macOS 15 (Apple Silicon) with Apple Clang 17
 
 ## License
 
