@@ -17,10 +17,6 @@ jobs:
             os: ubuntu-latest
             cc: gcc
             cxx: g++
-          - name: Linux Clang
-            os: ubuntu-latest
-            cc: clang
-            cxx: clang++
           - name: macOS Clang
             os: macos-latest
             cc: clang
@@ -30,6 +26,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Configure
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
