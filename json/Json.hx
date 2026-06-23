@@ -122,6 +122,11 @@ abstract Proxy(JValue) {
 		return new Proxy((this?.isObject() ?? false) ? this.findKey(k) : null);
 	}
 
+	// A `const char*` overload of `[]` so chaining a plain string literal stays unambiguous
+	@:op([]) public function keyChar(k:cpp.ConstCharStar):Proxy {
+		return key((k : String));
+	}
+
 	// Index into an array (null `Proxy` unless this is an array and `i` is in range)
 	@:op([]) public function index(i:Int):Proxy {
 		if (!(this?.isArray() ?? false) || i < 0 || i >= this.array.length) {

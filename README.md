@@ -110,6 +110,20 @@ if (node.isObject()) {
 }
 ```
 
+## Tests
+
+The test suite lives in [`tests/`](tests/) and uses [doctest](https://github.com/doctest/doctest).
+The library itself stays C++98/VC6-clean, but the tests build under a modern standard
+
+With CMake:
+
+```bash
+cmake -B build && cmake --build build && ctest --test-dir build --output-on-failure
+```
+
+CI runs the suite on Linux (GCC and Clang), macOS (Clang), and Windows (MSVC)
+via GitHub Actions.
+
 ## Tested platforms/compilers
 
 - [x] Windows 98 with Visual C++ 6.0

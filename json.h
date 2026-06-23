@@ -96,6 +96,8 @@ namespace json {
 		~proxy() {}
 		proxy key(const std::string& k);
 		proxy operator[](const std::string& k) { return key(k); }
+		proxy keyChar(const char* k);
+		proxy operator[](const char* k) { return keyChar(k); }
 		proxy index(int i);
 		proxy operator[](int i) { return index(i); }
 		std::string toStr();
@@ -238,6 +240,10 @@ namespace json {
 
 	inline proxy proxy::key(const std::string& k) {
 	return proxy(((this->__this != NULL ? this->__this->isObject() : false)) ? this->__this->findKey(k) : NULL);
+	}
+
+	inline proxy proxy::keyChar(const char* k) {
+	return key(k);
 	}
 
 	inline proxy proxy::index(int i) {
