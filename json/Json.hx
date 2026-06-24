@@ -144,7 +144,7 @@ abstract Proxy(JValue) {
 	}
 
 	@:to public function toFloat():cpp.Float32 {
-		return (this?.isString() ?? false) ? cast(Std.parseFloat(this.s), cpp.Float32) : cast(0.0, cpp.Float32);
+		return (this?.isString() ?? false) ? (Std.parseFloat(this.s) : cpp.Float32) : (0.0 : cpp.Float32);
 	}
 
 	@:to public function toBool():Bool {
