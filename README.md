@@ -35,19 +35,24 @@ std::string title   = config["title"];    // "example"
 ### Optional values with fallbacks
 
 Because a missing key returns a default-constructed value, it is convenient to
-wrap reads in small helpers that fall back when a key is absent:
+wrap reads in small helpers that fall back when a key is absent. These helpers
+are exposed in the json namespace:
 
 ```cpp
-bool OptionalBool(json::jobject& obj, const std::string& key, bool fallback) {
-    return obj.hasKey(key) ? (bool) obj[key] : fallback;
+bool optionalBool(jobject obj, const std::string& key, bool fallback) {
+	return obj.hasKey(key) ? obj[key] : fallback;
 }
 
-int OptionalInt(json::jobject& obj, const std::string& key, int fallback) {
-    return obj.hasKey(key) ? (int) obj[key] : fallback;
+int optionalInt(jobject obj, const std::string& key, int fallback) {
+	return obj.hasKey(key) ? obj[key] : fallback;
 }
 
-std::string OptionalString(json::jobject& obj, const std::string& key, const std::string& fallback) {
-    return obj.hasKey(key) ? (std::string) obj[key] : fallback;
+std::string optionalString(jobject obj, const std::string& key, const std::string& fallback) {
+	return obj.hasKey(key) ? obj[key] : fallback;
+}
+
+float optionalFloat(jobject obj, const std::string& key, float fallback) {
+	return obj.hasKey(key) ? obj[key] : fallback;
 }
 ```
 
