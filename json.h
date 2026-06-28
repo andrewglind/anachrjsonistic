@@ -138,6 +138,10 @@ namespace json {
 
 	inline proxy jobject::operator[](const std::string& key) { return get(key); }
 
+	bool optionalBool(int obj, int key, int fallback);
+	int optionalInt(int obj, int key, int fallback);
+	std::string optionalString(int obj, int key, int fallback);
+	float optionalFloat(int obj, int key, int fallback);
 	jobject parse(int text);
 
 }
@@ -469,6 +473,18 @@ namespace json {
 	return _ret5;
 	}
 
+	inline bool optionalBool(jobject obj, const std::string& key, bool fallback) {
+	return obj.hasKey(key) ? obj[key] : fallback;
+	}
+	inline int optionalInt(jobject obj, const std::string& key, int fallback) {
+	return obj.hasKey(key) ? obj[key] : fallback;
+	}
+	inline std::string optionalString(jobject obj, const std::string& key, const std::string& fallback) {
+	return obj.hasKey(key) ? obj[key] : fallback;
+	}
+	inline float optionalFloat(jobject obj, const std::string& key, float fallback) {
+	return obj.hasKey(key) ? obj[key] : fallback;
+	}
 	inline jobject parse(const std::string& text) {
 	return Json::parse(text);
 	}

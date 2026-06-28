@@ -340,6 +340,17 @@ class Json {
 }
 
 // ---------------------------------------------------------------------------
+// Optional helpers
+// ---------------------------------------------------------------------------
+final optionalBool:(JObject, String, Bool) -> Bool = (obj, key, fallback) -> obj.hasKey(key) ? obj[key] : fallback;
+
+final optionalInt:(JObject, String, Int) -> Int = (obj, key, fallback) -> obj.hasKey(key) ? obj[key] : fallback;
+
+final optionalString:(JObject, String, String) -> String = (obj, key, fallback) -> obj.hasKey(key) ? obj[key] : fallback;
+
+final optionalFloat:(JObject, String, cpp.Float32) -> cpp.Float32 = (obj, key, fallback) -> obj.hasKey(key) ? obj[key] : fallback;
+
+// ---------------------------------------------------------------------------
 // Entry point
 // ---------------------------------------------------------------------------
 final parse:(String) -> JObject = (text) -> Json.parse(text);
