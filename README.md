@@ -48,7 +48,7 @@ int optionalInt(jobject obj, const std::string& key, int fallback) {
 }
 
 std::string optionalString(jobject obj, const std::string& key, const std::string& fallback) {
-	return obj.hasKey(key) ? obj[key] : fallback;
+	return obj.hasKey(key) ? std::string(obj[key]) : fallback;
 }
 
 float optionalFloat(jobject obj, const std::string& key, float fallback) {
