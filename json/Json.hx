@@ -346,7 +346,7 @@ final optionalBool:(JObject, String, Bool) -> Bool = (obj, key, fallback) -> obj
 
 final optionalInt:(JObject, String, Int) -> Int = (obj, key, fallback) -> obj.hasKey(key) ? obj[key] : fallback;
 
-final optionalString:(JObject, String, String) -> String = (obj, key, fallback) -> obj.hasKey(key) ? obj[key] : fallback;
+final optionalString:(JObject, String, String) -> String = (obj, key, fallback) -> obj.hasKey(key) ? untyped __cpp__("std::string({0})", obj[key]) : fallback;
 
 final optionalFloat:(JObject, String, cpp.Float32) -> cpp.Float32 = (obj, key, fallback) -> obj.hasKey(key) ? obj[key] : fallback;
 
