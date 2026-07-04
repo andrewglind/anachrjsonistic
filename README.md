@@ -66,7 +66,7 @@ json::jobject config = json::parse(text);
 
 // Read the nested object, then pull values from it...
 json::jobject display = config["display"];
-int rate = OptionalInt(display, "refresh_rate", 60);
+int rate = json::optionalInt(display, "refresh_rate", 60);
 
 // ...or chain straight through.
 int size = config["buffer"]["size"];
@@ -84,7 +84,7 @@ if (config.hasKey("items")) {
     for (std::vector<json::jobject>::const_iterator it = items.begin(); it != items.end(); ++it) {
         json::jobject item = *it;
         std::string name = item["name"];
-        bool active = OptionalBool(item, "active", true);
+        bool active = json::optionalBool(item, "active", true);
         // ...
     }
 }
