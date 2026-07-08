@@ -4,22 +4,6 @@
 #include "json.h"
 
 // ---------------------------------------------------------------------------
-// Helpers from the README's "Optional values with fallbacks" section
-// ---------------------------------------------------------------------------
-
-static bool OptionalBool(json::jobject& obj, const std::string& key, bool fallback) {
-    return obj.hasKey(key) ? (bool) obj[key] : fallback;
-}
-
-static int OptionalInt(json::jobject& obj, const std::string& key, int fallback) {
-    return obj.hasKey(key) ? (int) obj[key] : fallback;
-}
-
-static std::string OptionalString(json::jobject& obj, const std::string& key, const std::string& fallback) {
-    return obj.hasKey(key) ? (std::string) obj[key] : fallback;
-}
-
-// ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
@@ -90,14 +74,14 @@ TEST_CASE("optional values with fallbacks") {
     json::jobject config = json::parse(
         "{ \"name\": \"set\", \"timeout\": 30, \"verbose\": true }");
 
-    CHECK(OptionalString(config, "name", "fallback") == "set");
-    CHECK(OptionalString(config, "missing", "fallback") == "fallback");
+    CHECK(json::optionalString(config, "name", "fallback") == "set");
+    CHECK(json::optionalString(config, "missing", "fallback") == "fallback");
 
-    CHECK(OptionalInt(config, "timeout", 10) == 30);
-    CHECK(OptionalInt(config, "missing", 10) == 10);
+    CHECK(json::optionalInt(config, "timeout", 10) == 30);
+    CHECK(json::optionalInt(config, "missing", 10) == 10);
 
-    CHECK(OptionalBool(config, "verbose", false));
-    CHECK(OptionalBool(config, "missing", true));
+    CHECK(json::optionalBool(config, "verbose", false));
+    CHECK(json::optionalBool(config, "missing", true));
 }
 
 TEST_CASE("nested objects: assign-to-jobject and chained access") {
@@ -105,11 +89,11 @@ TEST_CASE("nested objects: assign-to-jobject and chained access") {
         "{ \"display\": { \"refresh_rate\": 120 }, \"buffer\": { \"size\": 4096 } }");
 
     json::jobject display = config["display"];
-    int rate = OptionalInt(display, "refresh_rate", 60);
+    int rate = json::optionalInt(display, "refresh_rate", 60);
     CHECK(rate == 120);
 
     // Fallback when the nested key is absent.
-    int depth = OptionalInt(display, "depth", 24);
+    int depth = json::optionalInt(display, "depth", 24);
     CHECK(depth == 24);
 
     // ...or chain straight through.
@@ -132,14 +116,14 @@ TEST_CASE("arrays of objects") {
 
     // items[N] is a jobject (vector element).
     CHECK((std::string) items[0]["name"] == "alpha");
-    CHECK(OptionalBool(items[0], "active", true));
+    CHECK(json::optionalBool(items[0], "active", true));
 
     CHECK((std::string) items[1]["name"] == "beta");
-    CHECK(!OptionalBool(items[1], "active", true));
+    CHECK(!json::optionalBool(items[1], "active", true));
 
     // Missing "active" falls back to the default.
     CHECK((std::string) items[2]["name"] == "gamma");
-    CHECK(OptionalBool(items[2], "active", true));
+    CHECK(json::optionalBool(items[2], "active", true));
 }
 
 TEST_CASE("array element access via the proxy index operator") {
