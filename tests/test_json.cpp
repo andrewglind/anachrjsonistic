@@ -72,7 +72,7 @@ TEST_CASE("toBool recognises the documented truthy spellings and nothing else") 
 
 TEST_CASE("optional values with fallbacks") {
     json::jobject config = json::parse(
-        "{ \"name\": \"set\", \"timeout\": 30, \"verbose\": true }");
+        "{ \"name\": \"set\", \"timeout\": 30, \"verbose\": true, \"width\": 128.0 }");
 
     CHECK(json::optionalString(config, "name", "fallback") == "set");
     CHECK(json::optionalString(config, "missing", "fallback") == "fallback");
@@ -82,6 +82,9 @@ TEST_CASE("optional values with fallbacks") {
 
     CHECK(json::optionalBool(config, "verbose", false));
     CHECK(json::optionalBool(config, "missing", true));
+
+    CHECK(json::optionalFloat(config, "width", 64.0f) == 128.0f);
+    CHECK(json::optionalFloat(config, "missing", 128.0f) == 128.0f);
 }
 
 TEST_CASE("nested objects: assign-to-jobject and chained access") {
