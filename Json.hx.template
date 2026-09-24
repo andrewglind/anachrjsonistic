@@ -65,7 +65,7 @@ extern class JsonNative {
 
 @proxy("json::proxy") abstract Proxy(cpp.Pointer<ProxyNative>) {
 	@:op([]) public function key(k:String):Proxy { return null; }
-	@:arrayAccess public function index(i:Int):Proxy { return null; }
+	@:op([]) public function index(i:Int):Proxy { return null; }
 	@:to public function toStr():String { return ""; }
     @:to public function toInt():Int { return 0; }
 	@:to public function toFloat():cpp.Float32 { return 0.0; }
