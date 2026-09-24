@@ -34,6 +34,7 @@ extern class JObjectNative {
 
 @:include("${JSON_HOME}/json.h")
 @:native("json::proxy")
+@:stackOnly
 extern class ProxyNative {
 	public function toStr():cpp.StdString;
     public function toInt():Int;
@@ -57,16 +58,16 @@ extern class JsonNative {
 @proxy("json::jobject") abstract JObject(cpp.Pointer<JObjectNative>) {
 	public function hasKey(key:String):Bool { return false; }
 	public function toMap():Map<String, String> { return null; }
-	public function get(key:String):Proxy { return null; }
+	@:op([]) public function get(key:String):Proxy { return null; }
 }
 
 @proxy("json::proxy") abstract Proxy(cpp.Pointer<ProxyNative>) {
-	public function toStr():String { return ""; }
-    public function toInt():Int { return 0; }
-	public function toFloat():cpp.Float32 { return 0.0; }
-	public function toBool():Bool { return false; }
-	public function toObject():JObject { return null; }
-	public function toObjectArray():Array<JObject> { return null; }
+	@:to public function toStr():String { return ""; }
+    @:to public function toInt():Int { return 0; }
+	@:to public function toFloat():cpp.Float32 { return 0.0; }
+	@:to public function toBool():Bool { return false; }
+	@:to public function toObject():JObject { return null; }
+	@:to public function toObjectArray():Array<JObject> { return null; }
 }
 
 @proxy("json::Json") abstract Json(cpp.Pointer<JsonNative>) {
