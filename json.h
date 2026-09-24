@@ -480,7 +480,7 @@ namespace json {
 	return obj.hasKey(key) ? obj[key] : fallback;
 	}
 	inline std::string optionalString(jobject obj, const std::string& key, const std::string& fallback) {
-	return obj.hasKey(key) ? std::string(obj[key]) : fallback;
+	return obj.hasKey(key) ? ((std::string) obj[key]) : fallback;
 	}
 	inline float optionalFloat(jobject obj, const std::string& key, float fallback) {
 	return obj.hasKey(key) ? obj[key] : fallback;
