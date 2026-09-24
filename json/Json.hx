@@ -77,6 +77,22 @@ abstract JObject(JValue) {
 		}
 	}
 
+	public static function OptionalBool(obj:JObject, key:String, fallback:Bool):Bool {
+		return obj.hasKey(key) ? obj[key] : fallback;
+	}
+
+	public static function OptionalInt(obj:JObject, key:String, fallback:Int):Int {
+		return obj.hasKey(key) ? obj[key] : fallback;
+	}
+
+	public static function OptionalString(obj:JObject, key:String, fallback:String):String {
+		return obj.hasKey(key) ? cast(obj[key], String) : fallback;
+	}
+
+	public static function OptionalFloat(obj:JObject, key:String, fallback:cpp.Float32):cpp.Float32 { 
+		return obj.hasKey(key) ? obj[key] : fallback;
+	}
+
 	// The underlying node
 	public function root():JValue {
 		return this;
@@ -342,13 +358,13 @@ class Json {
 // ---------------------------------------------------------------------------
 // Optional helpers
 // ---------------------------------------------------------------------------
-final optionalBool:(JObject, String, Bool) -> Bool = (obj, key, fallback) -> obj.hasKey(key) ? obj[key] : fallback;
+final optionalBool:(JObject, String, Bool) -> Bool = (obj, key, fallback) -> JObject.OptionalBool(obj, key, fallback);
 
-final optionalInt:(JObject, String, Int) -> Int = (obj, key, fallback) -> obj.hasKey(key) ? obj[key] : fallback;
+final optionalInt:(JObject, String, Int) -> Int = (obj, key, fallback) -> JObject.OptionalInt(obj, key, fallback);
 
-final optionalString:(JObject, String, String) -> String = (obj, key, fallback) -> obj.hasKey(key) ? cast(obj[key], String) : fallback;
+final optionalString:(JObject, String, String) -> String = (obj, key, fallback) -> JObject.OptionalString(obj, key, fallback);
 
-final optionalFloat:(JObject, String, cpp.Float32) -> cpp.Float32 = (obj, key, fallback) -> obj.hasKey(key) ? obj[key] : fallback;
+final optionalFloat:(JObject, String, cpp.Float32) -> cpp.Float32 = (obj, key, fallback) -> JObject.OptionalFloat(obj, key, fallback);
 
 // ---------------------------------------------------------------------------
 // Entry point

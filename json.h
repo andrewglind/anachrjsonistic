@@ -78,6 +78,10 @@ namespace json {
 	public:
 		jobject(jvalue* root = NULL);
 		~jobject() {}
+		static bool OptionalBool(jobject obj, const std::string& key, bool fallback);
+		static int OptionalInt(jobject obj, const std::string& key, int fallback);
+		static std::string OptionalString(jobject obj, const std::string& key, const std::string& fallback);
+		static float OptionalFloat(jobject obj, const std::string& key, float fallback);
 		jvalue* root();
 		bool hasKey(const std::string& key);
 		void setString(const std::string& key, const std::string& value);
@@ -200,6 +204,22 @@ namespace json {
 	} else {
 		this->__this = root;
 	}
+	}
+
+	inline bool jobject::OptionalBool(jobject obj, const std::string& key, bool fallback) {
+	return obj.hasKey(key) ? obj[key] : fallback;
+	}
+
+	inline int jobject::OptionalInt(jobject obj, const std::string& key, int fallback) {
+	return obj.hasKey(key) ? obj[key] : fallback;
+	}
+
+	inline std::string jobject::OptionalString(jobject obj, const std::string& key, const std::string& fallback) {
+	return obj.hasKey(key) ? ((std::string) obj[key]) : fallback;
+	}
+
+	inline float jobject::OptionalFloat(jobject obj, const std::string& key, float fallback) {
+	return obj.hasKey(key) ? obj[key] : fallback;
 	}
 
 	inline jvalue* jobject::root() {
@@ -474,16 +494,16 @@ namespace json {
 	}
 
 	inline bool optionalBool(jobject obj, const std::string& key, bool fallback) {
-	return obj.hasKey(key) ? obj[key] : fallback;
+	return jobject::OptionalBool(obj, key, fallback);
 	}
 	inline int optionalInt(jobject obj, const std::string& key, int fallback) {
-	return obj.hasKey(key) ? obj[key] : fallback;
+	return jobject::OptionalInt(obj, key, fallback);
 	}
 	inline std::string optionalString(jobject obj, const std::string& key, const std::string& fallback) {
-	return obj.hasKey(key) ? ((std::string) obj[key]) : fallback;
+	return jobject::OptionalString(obj, key, fallback);
 	}
 	inline float optionalFloat(jobject obj, const std::string& key, float fallback) {
-	return obj.hasKey(key) ? obj[key] : fallback;
+	return jobject::OptionalFloat(obj, key, fallback);
 	}
 	inline jobject parse(const std::string& text) {
 	return Json::parse(text);
